@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Mein Rezeptbuch</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Georgia', serif;
+      background: #fdf6ec;
+      color: #3a2e1e;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #8b4513;
+      color: #fff8f0;
+      text-align: center;
+      padding: 2.5rem 1rem;
+    }
+
+    header h1 {
+      font-size: 2.8rem;
+      letter-spacing: 2px;
+    }
+
+    header p {
+      margin-top: 0.5rem;
+      font-style: italic;
+      opacity: 0.85;
+    }
+
+    nav {
+      background: #a0522d;
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      padding: 0.75rem;
+      flex-wrap: wrap;
+    }
+
+    nav button {
+      background: transparent;
+      border: 2px solid #fff8f0;
+      color: #fff8f0;
+      padding: 0.4rem 1.1rem;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.95rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    nav button:hover,
+    nav button.active {
+      background: #fff8f0;
+      color: #8b4513;
+    }
+
+    main {
+      max-width: 1000px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    .recipe-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1.5rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
+      cursor: pointer;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.15);
+    }
+
+    .card-emoji {
+      background: #fdebd0;
+      text-align: center;
+      font-size: 3.5rem;
+      padding: 1.5rem;
+    }
+
+    .card-body {
+      padding: 1rem 1.2rem 1.4rem;
+    }
+
+    .card-category {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #a0522d;
+      font-family: sans-serif;
+      margin-bottom: 0.3rem;
+    }
+
+    .card h2 {
+      font-size: 1.2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .card p {
+      font-size: 0.9rem;
+      color: #6b5744;
+      line-height: 1.5;
+    }
+
+    .meta {
+      display: flex;
+      gap: 1rem;
+      margin-top: 0.8rem;
+      font-size: 0.82rem;
+      color: #888;
+      font-family: sans-serif;
+    }
+
+    /* Modal */
+    .overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      z-index: 10;
+      justify-content: center;
+      align-items: center;
+      padding: 1rem;
+    }
+
+    .overlay.open { display: flex; }
+
+    .modal {
+      background: #fff;
+      border-radius: 16px;
+      max-width: 640px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      padding: 2rem;
+      position: relative;
+    }
+
+    .modal-emoji { font-size: 3rem; margin-bottom: 0.5rem; }
+
+    .modal h2 { font-size: 1.8rem; margin-bottom: 0.3rem; }
+
+    .modal .modal-meta {
+      display: flex;
+      gap: 1.5rem;
+      font-size: 0.85rem;
+      color: #888;
+      font-family: sans-serif;
+      margin-bottom: 1.2rem;
+    }
+
+    .modal h3 {
+      font-size: 1.1rem;
+      color: #8b4513;
+      margin: 1.2rem 0 0.5rem;
+      border-bottom: 1px solid #fdebd0;
+      padding-bottom: 0.3rem;
+    }
+
+    .modal ul, .modal ol {
+      padding-left: 1.4rem;
+      line-height: 1.9;
+    }
+
+    .modal li { margin-bottom: 0.2rem; }
+
+    .close-btn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: #fdebd0;
+      border: none;
+      border-radius: 50%;
+      width: 32px;
+      height: 32px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 32px;
+      text-align: center;
+    }
+
+    .hidden { display: none; }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: #a08060;
+      font-size: 0.85rem;
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>📖 Mein Rezeptbuch</h1>
+  <p>Hausgemachte Lieblingsrezepte für jeden Anlass</p>
+</header>
+
+<nav>
+  <button class="active" onclick="filter('alle', this)">Alle</button>
+  <button onclick="filter('frühstück', this)">Frühstück</button>
+  <button onclick="filter('hauptgericht', this)">Hauptgericht</button>
+  <button onclick="filter('beilage', this)">Beilage</button>
+  <button onclick="filter('dessert', this)">Dessert</button>
+  <button onclick="filter('getränk', this)">Getränke</button>
+</nav>
+
+<main>
+  <div class="recipe-grid" id="grid"></div>
+</main>
+
+<div class="overlay" id="overlay" onclick="closeModal(event)">
+  <div class="modal" id="modal">
+    <button class="close-btn" onclick="closeModalBtn()">✕</button>
+    <div id="modal-content"></div>
+  </div>
+</div>
+
+<footer>
+  🍴 Mit Liebe gekocht &nbsp;·&nbsp; Guten Appetit!
+</footer>
+
+<script>
+const recipes = [
+  {
+    emoji: "🥞",
+    name: "Pfannkuchen",
+    category: "frühstück",
+    desc: "Fluffige Pfannkuchen – perfekt für einen gemütlichen Sonntagmorgen.",
+    zeit: "20 Min.",
+    portionen: "4 Portionen",
+    zutaten: [
+      "200 g Mehl",
+      "2 Eier",
+      "300 ml Milch",
+      "1 Prise Salz",
+      "1 EL Zucker",
+      "Butter zum Braten"
+    ],
+    zubereitung: [
+      "Mehl, Eier, Milch, Salz und Zucker zu einem glatten Teig verrühren.",
+      "Den Teig 10 Minuten ruhen lassen.",
+      "Butter in einer Pfanne erhitzen.",
+      "Je eine Kelle Teig hineingeben und dünn verteilen.",
+      "Von beiden Seiten goldbraun braten.",
+      "Mit Marmelade, Ahornsirup oder Zucker servieren."
+    ]
+  },
+  {
+    emoji: "🍝",
+    name: "Spaghetti Bolognese",
+    category: "hauptgericht",
+    desc: "Klassische italienische Bolognese – herzhaft, cremig und unwiderstehlich.",
+    zeit: "45 Min.",
+    portionen: "4 Portionen",
+    zutaten: [
+      "500 g Spaghetti",
+      "400 g Hackfleisch (gemischt)",
+      "1 Zwiebel",
+      "2 Knoblauchzehen",
+      "400 g gehackte Tomaten (Dose)",
+      "2 EL Tomatenmark",
+      "Olivenöl, Salz, Pfeffer, Oregano",
+      "Parmesan zum Servieren"
+    ],
+    zubereitung: [
+      "Zwiebel und Knoblauch fein hacken und in Olivenöl anbraten.",
+      "Hackfleisch dazugeben und krümelig braten.",
+      "Tomatenmark einrühren und kurz rösten.",
+      "Gehackte Tomaten dazugeben, mit Salz, Pfeffer und Oregano würzen.",
+      "Sauce 20–25 Minuten auf niedriger Hitze köcheln lassen.",
+      "Spaghetti nach Packungsanweisung kochen.",
+      "Sauce über die Pasta geben und mit Parmesan bestreuen."
+    ]
+  },
+  {
+    emoji: "🍰",
+    name: "Käsekuchen",
+    category: "dessert",
+    desc: "Cremiger Käsekuchen mit knusprigem Boden – ein Klassiker der deutschen Backkunst.",
+    zeit: "75 Min.",
+    portionen: "12 Stücke",
+    zutaten: [
+      "200 g Butterkekse",
+      "100 g Butter (geschmolzen)",
+      "750 g Quark (Magerstufe)",
+      "200 g Zucker",
+      "3 Eier",
+      "1 Päckchen Vanillepudding",
+      "100 ml Sahne",
+      "Saft einer halben Zitrone"
+    ],
+    zubereitung: [
+      "Kekse fein zerbröseln und mit geschmolzener Butter mischen.",
+      "Masse in eine Springform (26 cm) drücken und kühlen.",
+      "Ofen auf 175 °C Ober-/Unterhitze vorheizen.",
+      "Quark, Zucker, Eier, Puddingpulver, Sahne und Zitronensaft cremig rühren.",
+      "Masse auf den Boden geben.",
+      "Ca. 55 Minuten backen – Mitte darf noch leicht wackeln.",
+      "Im ausgeschalteten Ofen mit Spalt abkühlen lassen, dann kühlen."
+    ]
+  },
+  {
+    emoji: "🥗",
+    name: "Grüner Salat mit Honig-Senf-Dressing",
+    category: "beilage",
+    desc: "Frischer gemischter Salat mit einem leicht süßlichen Dressing.",
+    zeit: "10 Min.",
+    portionen: "2 Portionen",
+    zutaten: [
+      "1 Kopfsalat oder Rucola",
+      "1 Tomate",
+      "½ Gurke",
+      "2 EL Olivenöl",
+      "1 EL Weißweinessig",
+      "1 TL Honig",
+      "1 TL Dijon-Senf",
+      "Salz und Pfeffer"
+    ],
+    zubereitung: [
+      "Salat waschen und in mundgerechte Stücke zupfen.",
+      "Tomaten und Gurke in Scheiben schneiden.",
+      "Olivenöl, Essig, Honig und Senf zu einem Dressing verrühren.",
+      "Mit Salz und Pfeffer abschmecken.",
+      "Dressing über den Salat geben und sofort servieren."
+    ]
+  },
+  {
+    emoji: "🍵",
+    name: "Chai Latte",
+    category: "getränk",
+    desc: "Wärmendes Gewürzgetränk mit Milch – perfekt für kalte Tage.",
+    zeit: "10 Min.",
+    portionen: "2 Tassen",
+    zutaten: [
+      "400 ml Milch",
+      "2 schwarze Teebeutel",
+      "1 Zimtstange",
+      "3 Kardamomkapseln",
+      "2 Gewürznelken",
+      "1 Scheibe Ingwer",
+      "2 TL Zucker oder Honig"
+    ],
+    zubereitung: [
+      "Gewürze (Zimt, Kardamom, Nelken, Ingwer) im Mörser leicht andrücken.",
+      "Milch mit Gewürzen in einem Topf erhitzen (nicht kochen).",
+      "Teebeutel dazugeben und 4 Minuten ziehen lassen.",
+      "Teebeutel entfernen, Gewürze absieben.",
+      "Mit Zucker oder Honig süßen.",
+      "Aufschäumen und in Tassen füllen."
+    ]
+  },
+  {
+    emoji: "🍲",
+    name: "Kartoffelsuppe",
+    category: "hauptgericht",
+    desc: "Herzhafte deutsche Kartoffelsuppe – wärmend, sättigend und einfach zu kochen.",
+    zeit: "35 Min.",
+    portionen: "4 Portionen",
+    zutaten: [
+      "800 g Kartoffeln",
+      "1 Zwiebel",
+      "2 Möhren",
+      "2 Stangen Sellerie",
+      "1 L Gemüsebrühe",
+      "100 ml Sahne",
+      "Salz, Pfeffer, Muskat",
+      "Frische Petersilie"
+    ],
+    zubereitung: [
+      "Kartoffeln, Möhren und Sellerie schälen und würfeln.",
+      "Zwiebel fein hacken und in etwas Öl anbraten.",
+      "Gemüse dazugeben und kurz mitbraten.",
+      "Mit Gemüsebrühe aufgießen und 20 Minuten kochen.",
+      "Einen Teil pürieren, einen Teil stückig lassen.",
+      "Sahne einrühren, mit Salz, Pfeffer und Muskat abschmecken.",
+      "Mit frischer Petersilie garniert servieren."
+    ]
+  },
+  {
+    emoji: "🫐",
+    name: "Blaubeer-Overnight-Oats",
+    category: "frühstück",
+    desc: "Gesundes und schnelles Frühstück – wird über Nacht zubereitet.",
+    zeit: "5 Min. + Kühlzeit",
+    portionen: "1 Portion",
+    zutaten: [
+      "60 g Haferflocken",
+      "150 ml Milch oder Pflanzenmilch",
+      "100 g Joghurt",
+      "1 EL Chiasamen",
+      "1 EL Ahornsirup",
+      "100 g Blaubeeren"
+    ],
+    zubereitung: [
+      "Haferflocken, Milch, Joghurt, Chiasamen und Sirup mischen.",
+      "In ein Glas füllen und abdecken.",
+      "Über Nacht im Kühlschrank quellen lassen.",
+      "Am nächsten Morgen mit Blaubeeren toppen und genießen."
+    ]
+  },
+  {
+    emoji: "🍫",
+    name: "Schokoladen-Mousse",
+    category: "dessert",
+    desc: "Luftiges Schokomousse – einfach zuzubereiten und absolut verführerisch.",
+    zeit: "20 Min. + Kühlzeit",
+    portionen: "4 Portionen",
+    zutaten: [
+      "200 g dunkle Schokolade (70 %)",
+      "4 Eier (getrennt)",
+      "2 EL Zucker",
+      "200 ml Schlagsahne",
+      "1 Prise Salz"
+    ],
+    zubereitung: [
+      "Schokolade im Wasserbad schmelzen und etwas abkühlen lassen.",
+      "Eigelb mit Zucker cremig schlagen, dann Schokolade einrühren.",
+      "Sahne steif schlagen und unterheben.",
+      "Eiweiß mit Salz steif schlagen und vorsichtig unterheben.",
+      "In Gläser füllen und mindestens 2 Stunden kühlen."
+    ]
+  }
+];
+
+let currentFilter = 'alle';
+
+function renderCards(filter) {
+  const grid = document.getElementById('grid');
+  grid.innerHTML = '';
+  const filtered = filter === 'alle' ? recipes : recipes.filter(r => r.category === filter);
+  filtered.forEach((r, i) => {
+    const idx = recipes.indexOf(r);
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.onclick = () => openModal(idx);
+    card.innerHTML = `
+      <div class="card-emoji">${r.emoji}</div>
+      <div class="card-body">
+        <div class="card-category">${r.category}</div>
+        <h2>${r.name}</h2>
+        <p>${r.desc}</p>
+        <div class="meta">
+          <span>⏱ ${r.zeit}</span>
+          <span>👥 ${r.portionen}</span>
+        </div>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+}
+
+function filter(cat, btn) {
+  currentFilter = cat;
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  renderCards(cat);
+}
+
+function openModal(idx) {
+  const r = recipes[idx];
+  document.getElementById('modal-content').innerHTML = `
+    <div class="modal-emoji">${r.emoji}</div>
+    <h2>${r.name}</h2>
+    <div class="modal-meta">
+      <span>⏱ ${r.zeit}</span>
+      <span>👥 ${r.portionen}</span>
+      <span>🏷 ${r.category}</span>
+    </div>
+    <p>${r.desc}</p>
+    <h3>Zutaten</h3>
+    <ul>${r.zutaten.map(z => `<li>${z}</li>`).join('')}</ul>
+    <h3>Zubereitung</h3>
+    <ol>${r.zubereitung.map(s => `<li>${s}</li>`).join('')}</ol>
+  `;
+  document.getElementById('overlay').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeModal(e) {
+  if (e.target === document.getElementById('overlay')) closeModalBtn();
+}
+
+function closeModalBtn() {
+  document.getElementById('overlay').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+renderCards('alle');
+</script>
+</body>
+</html>
